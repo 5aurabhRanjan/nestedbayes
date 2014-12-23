@@ -1,6 +1,6 @@
 /*
  This file defines cache with gaussian process interpolation, suitable for real-valued functions.
- GPCache is to be called as an external primitive, but passed a WebPPL function.
+ cache is to be called as an external primitive (i.e. gpcache.cache(f)), but passed a WebPPL function.
  */
 "use strict";
 
@@ -8,6 +8,7 @@ var matrix = require('sylvester')
 var Vector = matrix.Vector
 
 
+//This form caches a function whose single arg is an array of reals.
 function GPCache(f, varianceThresh) {
   var varianceThresh = varianceThresh || 1.0
   var trainingArgs = [];
@@ -19,14 +20,14 @@ function GPCache(f, varianceThresh) {
   var gp = GaussianProcess(kernel);
   
   //create the cached function:
-  var cf = function(s,k,a,args) {
-    var args = Array.prototype.slice.call(arguments, 3);
+  var cf = function(s,k,a,realArgsArray) {
+//    var otherArgs = Array.prototype.slice.call(arguments, 4);
+    var args = realArgsArray
     var argsV = Vector.create(args)
     
     //estimate f(args) based on existing data:
-    //TODO: optimize params.
     if(trainingArgs.length > 0) {
-      var predicted = gp.evaluate(trainingArgs, Vector.create(trainingVals), [argsV])
+      var predicted = gp.evaluate([argsV])
       console.log("prediction for args "+args+"...")
       console.log(predicted)
     } else {
@@ -40,10 +41,11 @@ function GPCache(f, varianceThresh) {
       trainingArgs.push(argsV)
       var newk = function(s,r) {
         trainingVals.push(r)
-        //TODO: re-train GP here so that Cinv doesn't have to be recomputed on each evaluation.
+        //re-train GP:
+        gp.train(trainingArgs, $M(trainingVals))
         k(s,r);
       };
-      f.apply(this, [s,newk,a].concat(args));
+      f(s,newk,a,args);
     } else {
       console.log("using prediction "+ predicted.mu.e(1,1) +" for args "+args)
       k(s,predicted.mu.e(1,1))
@@ -54,7 +56,27 @@ function GPCache(f, varianceThresh) {
 }
 
 
-
+//this form caches a function whose first arg is an array of reals, and other args are whatever. interpolates for first arg.
+function mixedCache(f,vt) {
+  var c = {};
+  var cf = function(s,k,a,RealArgsArray,otherArgsHere) {
+    var otherArgs = Array.prototype.slice.call(arguments, 4);
+    var GPfn;
+    
+    var stringedArgs = JSON.stringify(otherArgs);
+    if (stringedArgs in c) {
+      GPfn = c[stringedArgs]
+    } else {
+      GPfn = GPCache(function(s,k,a,RealArgsArray){
+                     return f.apply(this, [s,k,a,RealArgsArray].concat(otherArgs))
+                     },vt)
+      c[stringedArgs] = GPfn
+    }
+    GPfn(s,k,a,RealArgsArray)
+  }
+  
+  return cf
+}
 
 
 /////// The below code was adapted from: https://github.com/scotthellman/gaussianprocess_js
@@ -173,11 +195,22 @@ var Kernels = function(){
 }();
 
 function GaussianProcess(kernel){
-  function evaluate(training_data,training_labels,testing_data){
+  
+  var C,Cinv,training_data,training_labels;
+  
+  function train(data,labels) {
+    training_data = data
+    training_labels = labels
+    gradientDescent(training_labels,training_data,0.1,0.005,20)
+    C = applyKernel(training_data,training_data,kernel);
+    Cinv = C.inv();
+  }
+  
+  function evaluate(testing_data){
     //build covariance matrix components
-    var C = applyKernel(training_data,training_data,kernel);
+//    var C = applyKernel(training_data,training_data,kernel);
     var k = applyKernel(training_data,testing_data,kernel);
-    var Cinv = C.inv();
+//    var Cinv = C.inv();
     var c = applyKernel(testing_data,testing_data,kernel);
     
     //condition
@@ -265,7 +298,8 @@ function GaussianProcess(kernel){
   
   return{
 		evaluate:evaluate,
-		gradientDescent:gradientDescent,
+    train:train,
+//		gradientDescent:gradientDescent,
 		kernel:kernel
   }
 }
@@ -280,5 +314,5 @@ function wrapScalarsAsVectors(xs){
 
 ////////////////////////
 module.exports = {
-  GPCache : GPCache
+cache: mixedCache
 }
