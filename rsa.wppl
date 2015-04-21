@@ -1,7 +1,7 @@
 ///first load and cleanup the data.
 //TODO
 
-var data = [1, 2, 2]
+var data = [2, 2, 2]
 
 ///next the RSA model, with a parameter for alternative weights.
 
@@ -60,15 +60,19 @@ var listenerScore = gpcache.cache(function(altWeights, utterance, world) {
 
 ///now analyse the data against the RSA model. infer posterior on alternative weights.
 
-MH(function(){
-   var altWeights = [1, uniform(0,1), 1]
+var allWeight = MH(function(){
+//   var altWeights = [1, uniform(0,1), 1]
+   var altWeights = [1, uniformDraw([0.5, 1, 2]), 1]
+
    
    var utterance = "some of the people are nice"
    
    //TODO: response linking function?
    map(function(r){factor(listenerScore(altWeights, utterance, r))}, data)
    
-   return altWeights
+   return altWeights[1]
    },
-   10)
+   100)
+
+expectation(allWeight, function(x){return x})
 

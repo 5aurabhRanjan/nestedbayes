@@ -27,8 +27,8 @@ function GPCache(f, varianceThresh) {
     
     //estimate f(args) based on existing data:
     if(trainingArgs.length > 0) {
-      var predicted = gp.evaluate([argsV])
       console.log("prediction for args "+args+"...")
+      var predicted = gp.evaluate([argsV])
       console.log(predicted)
     } else {
       var predicted = null
@@ -42,7 +42,9 @@ function GPCache(f, varianceThresh) {
       var newk = function(s,r) {
         trainingVals.push(r)
         //re-train GP:
+        console.log("  re-training GP...")
         gp.train(trainingArgs, $M(trainingVals))
+        console.log("  trained.")
         k(s,r);
       };
       f(s,newk,a,args);
@@ -201,7 +203,9 @@ function GaussianProcess(kernel){
   function train(data,labels) {
     training_data = data
     training_labels = labels
-    gradientDescent(training_labels,training_data,0.1,0.005,20)
+//    console.log("    gradient descent...")
+//    gradientDescent(training_labels,training_data,0.1,0.005,20)
+    console.log("    Cinv...")
     C = applyKernel(training_data,training_data,kernel);
     Cinv = C.inv();
   }
