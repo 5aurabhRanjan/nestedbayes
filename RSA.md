@@ -149,25 +149,25 @@ An interesting and pleasant side-effect of using a surrogate likelihood function
 The fancy caching methods generalizes to nearby arguments, but only do so at the level of an entire sub-model. Can we get finer-grained re-use within a model? Based (loosely) on stochastic inverses, we have begun to explore several techniques for 'predictive' inference---algorithms that use previous similar runs to predict aspects of a completed execution from a partial execution. In general we are thinking of these in an SMC setting, where they help guide the early choices before factors happen, though these predictions can be useful more generally (e.g. for block MH proposals).
 
 ###Heuristic factors
- learned heuristic factors for better smc
+Heuristic factors are canceling pairs of factors inserted into a program (not changing the distribution, but potentially influencing the algorithm). The ideal heuristic factor would (I think) be the expected score of completing the execution from the point here it occurs (since this up-weights executions that are likely to end up good, even if they aren't yet). One use of 'nearby' queries is to estimate this expected completion score. The algorithm is something like: find similar execution prefixes of the sub-model from similar arguments to the sub-model, use the final scores of these to estimate the expected final score of this execution. There are a number of details to explore in making this estimate good. It is also possible that something like a GP or neural net should be used to estimate the 'heuristic score' function.
 
 ###Sample predictors
-  latent variable predictors for better smc
-
-###Coarse-to-fine
-  coarse-to-fine smc?
-
+An alternative is to predict the latent variables directly. That is, if you know the values that a variable tends to take on in the normalized (posterior) distributions, conditioned on the current prefix, you may as well set it to this value. We would train these sample predictors from nearby executions as for heuristic factors. In SMC the trained predictors could be used as the importance distribution from which to sample new variables.
 
 ## Other stuff
    
-###pseudo-marginal MH
-  needs estimate of likelihood... but that can come from SMC.
+###Coarse-to-fine
+How could coarse-to-fine inference help?
+
+###Pseudo-marginal MH
+This gives unbiased estimates for doubly-intractable models by using sampled estimates of the likelihood in MH. The likelihood estimates could come from SMC. While the unbiasedness is nice, it's not clear that this is the best use of computational resources.
   
 ### SOSMC
+Do different orderings of the world, or parsing, models sometimes result in better samplers? If so, then SOSMC may help.
   
 ###Variational inference
 
-##SMT solvers 
+###SMT solvers 
   particularly in literalListener
 
 
