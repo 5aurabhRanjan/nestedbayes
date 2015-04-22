@@ -157,7 +157,7 @@ An alternative is to predict the latent variables directly. That is, if you know
 ## Other stuff
    
 ###Coarse-to-fine
-How could coarse-to-fine inference help?
+How could coarse-to-fine inference help? It's appealing to think of both the semantic parsing and the world generation process in a coarse to fine way... but this requires more thought!
 
 ###Pseudo-marginal MH
 This gives unbiased estimates for doubly-intractable models by using sampled estimates of the likelihood in MH. The likelihood estimates could come from SMC. While the unbiasedness is nice, it's not clear that this is the best use of computational resources.
