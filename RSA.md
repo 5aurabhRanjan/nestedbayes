@@ -127,20 +127,30 @@ Hard but important. Maybe from structured language / interviews (ala whybot)?
 
 # Some inference ideas
 
+pseudo-marginal MH? needs estimate of likelihood... smc? order? SOSMC?
+
 Observation: nested models are a perfect amortized setting.
 
-## Caching and friends
+Our current main method for inference in RSA is naive enumeration with caching of the sub-models. This is good because it's an exponential improvement over not caching, but doesn't help much with large or continuous state spaces.
+Can we get faster/better inferences by generalizing from related (sub)queries that we've already computed?
 
--caching (current method)
--faster/better inferences by generalizing from related (sub)queries?
+## Surrogate caching
 
-Inference ideas
-  caching / GP surrogate fn
-  learned heuristic factors for better smc
+Instead of simply caching the computed value of a sub-query (e.g. `speaker`), we could use these values to estimate a surrogate function; the surrogate would give us predictions for nearby argument values, that we could use instead of computing the actual function return distribution.
+
+Noisy estimates
+
+Gradients
+
+## Predictive inference
+
+ learned heuristic factors for better smc
   latent variable predictors for better smc
   coarse-to-fine smc?
-  pseudo-marginal MH? needs estimate of likelihood... smc? 
-  lifted inference / symmetry-based techniques
+
+
+## Other stuff
+   
   variational?
   use SMT solver? particularly in literalListener
 
