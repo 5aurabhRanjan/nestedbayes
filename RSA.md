@@ -111,6 +111,9 @@ People are really fast at language understanding and production. They also seem 
 
 Both reactive idioms and learned heuristic factors (etc) may have a role to play.
   
+## Uncertain agents
+For uncertain speakers the appropriate utility is not log-probability of the known state (because there isn't one); instead we have used KL-distance from the belief distribution of the speaker to the posterior distribution of the `literalListener`. This complicates matters somewhat for approximate inference techniques because KL can be hard to estimate (especially from samples).
+
   
 # Learning
 If we want to scale RSA to real-world applications, we will need to cover a much wider portion of language and world-knowledge.
@@ -127,22 +130,23 @@ Hard but important. Maybe from structured language / interviews (ala whybot)?
 
 # Some inference ideas
 
-pseudo-marginal MH? needs estimate of likelihood... smc? order? SOSMC?
+Scaling up inference to address the challenges outlined above will require exploring a number of different approaches. We will likely have to abandon exhaustive enumeration as state spaces get big. In it's place SMC seems like a fairly general approach that incorporates the best of MH (via rejuvenation), importance sampling (e.g. getting estimates of normalizing constant), and search.
 
-Observation: nested models are a perfect amortized setting.
-
-Our current main method for inference in RSA is naive enumeration with caching of the sub-models. This is good because it's an exponential improvement over not caching, but doesn't help much with large or continuous state spaces.
+A key observation is that nested models are a perfect amortized setting, where we need to do inference quickly on average across many instances of the sub-models.
+Our current main method for inference in RSA is naive enumeration with caching of the sub-models. This is an exponential improvement over not caching, but doesn't help much with large or continuous state spaces.
 Can we get faster/better inferences by generalizing from related (sub)queries that we've already computed?
 
 ## Surrogate caching
 
-Instead of simply caching the computed value of a sub-query (e.g. `speaker`), we could use these values to estimate a surrogate function; the surrogate would give us predictions for nearby argument values, that we could use instead of computing the actual function return distribution.
+Instead of simply caching the computed value of a sub-query (e.g. `speaker`), we could use these values to estimate a surrogate likelihood function; the surrogate would give us predictions for nearby argument values, that we could use instead of computing the actual function return distribution. An appropriate and fairly tractable family of surrogates is Gaussian processes (GP). (Note: GP take quadratic time  in the number of data points. This could be problematic. There are a variety of techniques that help.)
 
-Noisy estimates
+If the inference algorithm used to estimate the likelihood of the sub-model is not exact, for instance if it is based on SMC samples, then the surrogate-estimator needs to take into account the noise---that is, we should not be fully confident in the value returned by any one call to the cached function. For an unbiased estimator with approximately normal error distribution, this will be handled by a standard squared-error GP kernel. However since we probably won't know the variance of the noise *a priori*, we'll have to estimate it.
 
-Gradients
+An interesting and pleasant side-effect of using a surrogate likelihood function is that the surrogate gradient is likely to be easy to compute. This suggests doing gradient-based methods (HMC or SGD) using GP-caching to estimate the sub-models.
 
 ## Predictive inference
+
+The fancy caching methods generalizes to nearby arguments, but only do so at the level of an entire sub-model. Can we get finer-grained re-use within a model?
 
  learned heuristic factors for better smc
   latent variable predictors for better smc
@@ -151,6 +155,8 @@ Gradients
 
 ## Other stuff
    
+  pseudo-marginal MH? needs estimate of likelihood... but that can come from SMC.
+  order? SOSMC?
   variational?
   use SMT solver? particularly in literalListener
 
