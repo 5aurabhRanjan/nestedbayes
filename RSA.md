@@ -146,19 +146,29 @@ An interesting and pleasant side-effect of using a surrogate likelihood function
 
 ## Predictive inference
 
-The fancy caching methods generalizes to nearby arguments, but only do so at the level of an entire sub-model. Can we get finer-grained re-use within a model?
+The fancy caching methods generalizes to nearby arguments, but only do so at the level of an entire sub-model. Can we get finer-grained re-use within a model? Based (loosely) on stochastic inverses, we have begun to explore several techniques for 'predictive' inference---algorithms that use previous similar runs to predict aspects of a completed execution from a partial execution. In general we are thinking of these in an SMC setting, where they help guide the early choices before factors happen, though these predictions can be useful more generally (e.g. for block MH proposals).
 
+###Heuristic factors
  learned heuristic factors for better smc
+
+###Sample predictors
   latent variable predictors for better smc
+
+###Coarse-to-fine
   coarse-to-fine smc?
 
 
 ## Other stuff
    
-  pseudo-marginal MH? needs estimate of likelihood... but that can come from SMC.
-  order? SOSMC?
-  variational?
-  use SMT solver? particularly in literalListener
+###pseudo-marginal MH
+  needs estimate of likelihood... but that can come from SMC.
+  
+### SOSMC
+  
+###Variational inference
+
+##SMT solvers 
+  particularly in literalListener
 
 
   
