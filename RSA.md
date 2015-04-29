@@ -176,9 +176,68 @@ It may be that data structures that work at the level of equivalence classes may
   
 ###Variational inference
 
+How could we use variational inference in these models?
+
 ###SMT solvers 
-  particularly in literalListener
+
+Other people have good systems for solving deterministic constraints. This could be particularly useful in literalListener, when we can assume uniform prior.
 
 ###Tracing
 Whatever inference algorithm is used for the sub-model, it should pay to do very aggressive compilation. For instance, tracing out and unrolling a large part of the control flow, inlining coroutine and scoring code, and other partial evaluation.
+
+
+
+<!--
+Notes from lab meeting thanks to andreas:
+
+Discussion
+Could you restrict language by saying that subjects are talking to a child?
+You get many lexical semantics complications even then
+Can we run things in parallel? On GPU, say?
+Is it possible to use sets instead of ordered lists?
+How do you leverage the knowledge that it's a set?
+Even if it's a set you have to represent it internally so you have an ordering
+If you wrote a set library for webppl that allowed you to sample sets, would that help?
+Write a random object library?
+How much of the advantages of lifted inference would we get?
+Alternatives are not alternative things you could have said; instead, they could be alternative meanings that are used to pin down the real meaning?
+Semantic parser v1
+First compute alternative sentences, then their meanings
+Semantic parser v2
+Just compute nearby meanings
+The exact nature and role of alternatives is important psychologically, and also important for making these algorithms efficient
+How has the literature measured alternatives?
+People look at 
+response times in different contexts
+how good are you at retrieving sth from memory?
+naming a lexical item similar to one you heard before?
+confusability
+Hypothesis: If something was an alternative, it should be easier to retrieve
+In practice, there is no good empirical measure of alternativehood
+Why don't people just study production? Have people produce many sentences for same meaning?
+This doesn't get at e.g. alternative "not x" for sentence x
+One could look at what follows a partial sentence in a corpus
+Alternatives in models have a particular computational role, and none of the dependent measures directly get at it
+Do we know how the sets of alternatives affect the inferences our models make?
+E.g. in Will's studies, needed extra alternatives beyond the words he cared about
+Sometimes it's clear in a pretheoretic way; often, not
+Make sure you have enough alternatives so you can directly talk about every state of the world
+In wonky worlds experiments, get different predictions based on what the alternatives are
+Robert had a bootstrap estimator for Jensen Shannon divergence
+Will learning also get us the lexicon?
+Yes: Semantic parsing usually prespecifies a much-too-big lexicon, and then there are weights on these entries, which are learned (pruned)
+No: It's not that plausible that you'll be able to explicitly write down every possible choice that you might want to learn; so you might also want structure learning
+This is very hard
+Doing structure learning from corpus data is hard; but doing structure learning from exactly the right data could be feasible
+There is a lot of existing work on structure learning, but it's unclear that it's very relevant
+Does surrogate caching only work for continuous spaces?
+This applies to any space on which you have a distance function (a kernel)
+For worlds in general can ask: are there useful distance functions?
+You don't need a gradient
+Does this work on partially ordered spaces without continuous variables?
+May not make a lot of sense to interpolate between 110 and 101... but maybe with more levels
+We may be able to compute the gradient of the normalization constant (by tracking it through SMC steps)
+Why does SOSMC work?
+
+-->
 
