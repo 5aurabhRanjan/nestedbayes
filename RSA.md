@@ -70,8 +70,6 @@ Posterior (or MAP) parameter inference for RSA, which figures in both Bayesian d
 ## Bigger worlds
 When the support of the `worldPrior` (or an implicit generative model version) gets large, exact inference becomes intractable for both `literalListener` and `listener`. Large worlds can come quickly from having many objects and relations, from having multiple free-variables, etc. The impact of large worlds is more acute for RSA than typical inference problems because each additional world implies an additional evaluation of the `speaker` (which implies many evaluations of the `literalListener`, which depends on world size).
 
-**Alg:** One partial fix is to leverage symmetry in the model to do *lifted inference*. For instance, if there are multiple objects but their identities don't matter, then there is a permutation-group symmetry. By reducing the model space to equivalence classes before inference a lot of work can be saved. However, it can be had to find and harder to exploit symmetries. How many models we care about have exploitable symmetries?
-
 Another way that we end up with big effective world sizes is when there are *continuous variables* (which we currently often discretize). In general, continuous variables suggest moving away from enumeration.
 
 
@@ -142,7 +140,9 @@ Instead of simply caching the computed value of a sub-query (e.g. `speaker`), we
 
 If the inference algorithm used to estimate the likelihood of the sub-model is not exact, for instance if it is based on SMC samples, then the surrogate-estimator needs to take into account the noise---that is, we should not be fully confident in the value returned by any one call to the cached function. For an unbiased estimator with approximately normal error distribution, this will be handled by a standard squared-error GP kernel. However since we probably won't know the variance of the noise *a priori*, we'll have to estimate it.
 
-An interesting and pleasant side-effect of using a surrogate likelihood function is that the surrogate gradient is likely to be easy to compute. This suggests doing gradient-based methods (HMC or SGD) using GP-caching to estimate the sub-models.
+An interesting and pleasant side-effect of using a surrogate likelihood function is that the surrogate gradient is likely to be easy to compute. This suggests doing gradient-based methods (HMC or SGD) using GP-caching to estimate the sub-models. (During discussion it was suggested that direct estimates of the gradient may be available, e.g. when the AD can be used on the sub-model. It would be interesting both to compare these direct estimates with the surrogate gradient, and also to try using the estimated gradient as part of the training for the GP.)
+
+It is likely that these GP methods can be extended to non-continuous argument spaces, by providing a suitable kernel. Is there a way to write down a generic kernel, that gives reasonable performance?
 
 ## Predictive inference
 
@@ -150,6 +150,8 @@ The fancy caching methods generalizes to nearby arguments, but only do so at the
 
 ###Heuristic factors
 Heuristic factors are canceling pairs of factors inserted into a program (not changing the distribution, but potentially influencing the algorithm). The ideal heuristic factor would (I think) be the expected score of completing the execution from the point here it occurs (since this up-weights executions that are likely to end up good, even if they aren't yet). One use of 'nearby' queries is to estimate this expected completion score. The algorithm is something like: find similar execution prefixes of the sub-model from similar arguments to the sub-model, use the final scores of these to estimate the expected final score of this execution. There are a number of details to explore in making this estimate good. It is also possible that something like a GP or neural net should be used to estimate the 'heuristic score' function.
+
+There may be a connection between this approach and the surrogate-caching one described above: In this approach we are essentially attempting to estimate the normalizing constant of the continuation at the heuristic factor, seen as a function from the context (environment of the continuation, probably made explicit) to the real number Z (which is the expected score). In the caching approach we are trying to estimate the marginal likelihood function of the marginalized thunk, and this involves both estimating the normalizing content and the un-normalized score function for different return values. 
 
 ###Sample predictors
 An alternative is to predict the latent variables directly. That is, if you know the values that a variable tends to take on in the normalized (posterior) distributions, conditioned on the current prefix, you may as well set it to this value. We would train these sample predictors from nearby executions as for heuristic factors. In SMC the trained predictors could be used as the importance distribution from which to sample new variables.
@@ -164,11 +166,19 @@ This gives unbiased estimates for doubly-intractable models by using sampled est
   
 ### SOSMC
 Do different orderings of the world, or parsing, models sometimes result in better samplers? If so, then SOSMC may help.
+
+### Lifted inference
+One partial fix for the problem of large state spaces is to leverage symmetry in the model to do *lifted inference*. For instance, if there are multiple objects but their identities don't matter, then there is a permutation-group symmetry. By reducing the model space to equivalence classes before inference a lot of work can be saved. However, it can be had to find and harder to exploit symmetries. How many models we care about have exploitable symmetries?
+
+It is debatable how much symmetries matter when using sampling methods (as opposed to enumeration): the samples represent their equivalence classes in distribution. 
+
+It may be that data structures that work at the level of equivalence classes may be able to get much of the benefit without very hard program analysis. For instance a library for dealing with random sets (or more generally with random objects) could take care of the permutation group symmetry.
   
 ###Variational inference
 
 ###SMT solvers 
   particularly in literalListener
 
+###Tracing
+Whatever inference algorithm is used for the sub-model, it should pay to do very aggressive compilation. For instance, tracing out and unrolling a large part of the control flow, inlining coroutine and scoring code, and other partial evaluation.
 
-  
